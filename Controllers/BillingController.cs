@@ -7,7 +7,7 @@ namespace Gorold.Billing.Controllers;
 public class BillingController : ControllerBase
 {
     [HttpGet]
-    public IActionResult Get()
+    public async Task<IActionResult> Get()
     {
         return Ok("Dummy value");
     }
