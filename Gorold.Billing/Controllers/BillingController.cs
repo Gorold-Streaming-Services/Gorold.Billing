@@ -9,6 +9,7 @@ namespace Gorold.Billing.Controllers;
 public class BillingController : ControllerBase
 {
     private readonly IMongoCollection<BillingInfo> dbCollection;
+    private readonly FilterDefinitionBuilder<BillingInfo> filterBuilder = Builders<BillingInfo>.Filter;
 
     public BillingController(IMongoDatabase mongoDatabase)
     {
@@ -18,6 +19,6 @@ public class BillingController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Get()
     {
-        return Ok("Dummy value");
+        return Ok(await dbCollection.Find(filterBuilder.Empty).ToListAsync());
     }
 }

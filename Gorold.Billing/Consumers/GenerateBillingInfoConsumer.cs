@@ -22,7 +22,7 @@ namespace Gorold.Billing.Consumers
         {
             var message = context.Message;
             //do some logging of the stuff received
-            Debug.WriteLine($"Billing received for {message?.UserId} in the amount of {message?.AmountPaid} at {message?.PurchaseDate}'");
+            Debug.WriteLine($"Billing received for {message?.Id} in the amount of {message?.AmountPaid} at {message?.PurchaseDate}'");
 
             //write in databasez
             await dbCollection.InsertOneAsync(message);

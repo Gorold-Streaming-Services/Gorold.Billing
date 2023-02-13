@@ -26,6 +26,7 @@ builder.Services.AddMassTransitHostedService();
 
 //Add MongoDb
 BsonSerializer.RegisterSerializer(new GuidSerializer(BsonType.String));
+//BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
 BsonSerializer.RegisterSerializer(new DateTimeOffsetSerializer(BsonType.String));
 
 builder.Services.AddSingleton(serviceProvider =>
