@@ -1,7 +1,12 @@
 using System.Reflection;
 using Gorold.Billing.Extensions;
+using Gorold.Billing.Settings;
 using GreenPipes;
 using MassTransit;
+using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MongoDB.Bson.Serialization.Serializers;
+using MongoDB.Driver;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +22,22 @@ builder.Services.AddMassTransit(configure =>
                 });
             });
 builder.Services.AddMassTransitHostedService();
+
+
+//Add MongoDb
+BsonSerializer.RegisterSerializer(new GuidSerializer(BsonType.String));
+BsonSerializer.RegisterSerializer(new DateTimeOffsetSerializer(BsonType.String));
+
+builder.Services.AddSingleton(serviceProvider =>
+{
+    var configuration = serviceProvider.GetService<IConfiguration>();
+    var serviceSettings = configuration.GetSection(nameof(ServiceSettings)).Get<ServiceSettings>();
+    var mongoDbSettings = configuration.GetSection(nameof(MongoDbSettings)).Get<MongoDbSettings>();
+    var mongoClient = new MongoClient(mongoDbSettings.ConnectionString);
+    return mongoClient.GetDatabase(serviceSettings.ServiceName);
+});
+
+//builder.Services.AddSingleton<IMongoDatabase>();
 
 
 builder.Services.AddControllers();
