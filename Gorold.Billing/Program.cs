@@ -1,64 +1,56 @@
-using System.Reflection;
-using Gorold.Billing.Extensions;
-using Gorold.Billing.Settings;
-using GreenPipes;
-using MassTransit;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization;
-using MongoDB.Bson.Serialization.Serializers;
-using MongoDB.Driver;
+using Azure.Identity;
+using Gorold.Common.MassTransit;
+using Gorold.Common.MongoDb;
 
-var builder = WebApplication.CreateBuilder(args);
+internal class Program
+{
+    public static void Main(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+        // Add services to the container.
 
-// Add RabbitMQ services to the container
-builder.Services.AddMassTransit(configure =>
+        //configure another configuration source
+        builder.Host.ConfigureAppConfiguration((context, configurationBuilder) =>
+        {
+            //we only want to use Azure Key Vault when we are running in production
+            if (context.HostingEnvironment.IsProduction())
             {
-                configure.AddConsumers(Assembly.GetEntryAssembly());
-                configure.UsingGoroldRabbitMq(retry =>
-                {
-                    retry.Interval(3, TimeSpan.FromSeconds(5));
-                });
-            });
-builder.Services.AddMassTransitHostedService();
+                configurationBuilder.AddAzureKeyVault(
+                    new Uri("https://gorold.vault.azure.net/"),
+                    //Azure.Identity will fill the best way to fill the credentials based on the environment it's based
+                    //in production, it will use the kubernetes context to fill in those credentials
+                    new DefaultAzureCredential()
+                );
+            }
+        });
 
+        // Add RabbitMQ services to the container
+        builder.Services.AddMassTransitWithMessageBroker(builder.Configuration);
 
-//Add MongoDb
-BsonSerializer.RegisterSerializer(new GuidSerializer(BsonType.String));
-//BsonSerializer.RegisterSerializer(new GuidSerializer(GuidRepresentation.Standard));
-BsonSerializer.RegisterSerializer(new DateTimeOffsetSerializer(BsonType.String));
+        builder.Services.AddMongo();
 
-builder.Services.AddSingleton(serviceProvider =>
-{
-    var configuration = serviceProvider.GetService<IConfiguration>();
-    var serviceSettings = configuration.GetSection(nameof(ServiceSettings)).Get<ServiceSettings>();
-    var mongoDbSettings = configuration.GetSection(nameof(MongoDbSettings)).Get<MongoDbSettings>();
-    var mongoClient = new MongoClient(mongoDbSettings.ConnectionString);
-    return mongoClient.GetDatabase(serviceSettings.ServiceName);
-});
+        builder.Services.AddControllers();
+        // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
 
-//builder.Services.AddSingleton<IMongoDatabase>();
+        var app = builder.Build();
 
+        // Configure the HTTP request pipeline.
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+        app.UseHttpsRedirection();
 
-var app = builder.Build();
+        app.UseAuthorization();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
+        app.MapControllers();
+
+        app.Run();
+    }
 }
 
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();

@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  gorold-billing-deployment
+  labels:
+    app:  gorold-billing-deployment
+spec:
+  selector:
+    matchLabels:
+      app: gorold-billing-pod
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app:  gorold-billing-pod
+    spec:
+      serviceAccountName: gorold-billing-serviceaccount
+      containers:
+        - name: goroldbilling
+          image: gorold.azurecr.io/gorold.billing:v3
+          envFrom:
+            - configMapRef:
+                name: goroldbilling-env
+      imagePullSecrets:
+        - name: goroldregistry
