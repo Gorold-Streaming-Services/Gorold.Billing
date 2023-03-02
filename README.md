@@ -50,3 +50,6 @@ docker push "$appname.azurecr.io/play.inventory:$version"
 ```powershell
 az keyvault create -n $appname -g $appname
 ```
+
+## Key Vault
+To have the ability of access KeyVault from within K8s, please refer to: https://learn.microsoft.com/en-us/azure/aks/workload-identity-deploy-cluster#code-try-2
