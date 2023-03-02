@@ -4,3 +4,4 @@ metadata:
   name: goroldbilling-env
 data:
   ServiceSettings__MessageBroker: SERVICEBUS
+  ServiceSettings__KeyVaultName: "gorold"

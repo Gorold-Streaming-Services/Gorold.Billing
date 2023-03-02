@@ -1,4 +1,5 @@
 using Azure.Identity;
+using Gorold.Common.Configurations;
 using Gorold.Common.MassTransit;
 using Gorold.Common.MongoDb;
 
@@ -11,19 +12,7 @@ internal class Program
         // Add services to the container.
 
         //configure another configuration source
-        builder.Host.ConfigureAppConfiguration((context, configurationBuilder) =>
-        {
-            //we only want to use Azure Key Vault when we are running in production
-            if (context.HostingEnvironment.IsProduction())
-            {
-                configurationBuilder.AddAzureKeyVault(
-                    new Uri("https://gorold.vault.azure.net/"),
-                    //Azure.Identity will fill the best way to fill the credentials based on the environment it's based
-                    //in production, it will use the kubernetes context to fill in those credentials
-                    new DefaultAzureCredential()
-                );
-            }
-        });
+        builder.Host.ConfigureAzureKeyVault();
 
         // Add RabbitMQ services to the container
         builder.Services.AddMassTransitWithMessageBroker(builder.Configuration);
