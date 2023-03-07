@@ -17,9 +17,7 @@ spec:
       serviceAccountName: gorold-billing-serviceaccount
       containers:
         - name: goroldbilling
-          image: gorold.azurecr.io/gorold.billing:v4
+          image: rafaeljcamara/gorold.billing:v4
           envFrom:
             - configMapRef:
                 name: goroldbilling-env
-      imagePullSecrets:
-        - name: goroldregistry
